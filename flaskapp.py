@@ -1,5 +1,6 @@
 import os
 import re
+import requests
 from flask import Flask, send_from_directory, json, request
 from raven.contrib.flask import Sentry
 
@@ -53,15 +54,42 @@ def capabilities_descriptor():
 def start_session():
     if request.method == 'POST':
         req = request.json
-        msg = req['item']['message']['message']
+        print(req)
 
+        msg = req['item']['message']['message']
         start_url = re.findall(r'/surfly (.*)', msg)[0]
 
-        follower_link = 'https://surfly.com/123-123-123'
+        resp = requests.post(
+            'https://api.surfly.com/v2/sessions/',
+            params={'api_key': app.config['SURFLY_API_KEY']},
+            json={
+                'url': start_url,
+
+            },
+            timeout=5
+        )
+
+        if resp.status_code != 200:
+            err_msg = str(resp.status_code)
+            try:
+                err_msg += str(resp.json())
+            except:
+                pass
+            return json.jsonify({
+                'color': 'red',
+                'message_format': 'text',
+                'notify': True,
+                'message': 'Error while creating a session: %s' % err_msg,
+            })
+
+        resp_data = resp.json()
+        follower_link = resp_data['viewer_link']
+        leader_link = resp_data['leader_link']
+
         return json.jsonify({
             'message_format': 'text',
             'notify': True,
-            'message': 'Started a Surfly session %s at %s' % (start_url, follower_link),
+            'message': 'Started a Surfly session %s at %s' % (leader_link, follower_link),
         })
 
 
