@@ -4,13 +4,14 @@ import requests
 from flask import Flask, send_from_directory, json, request
 from raven.contrib.flask import Sentry
 
-from settings import SENTRY_DSN, SURFLY_API_KEY
+from settings import SENTRY_DSN, SURFLY_API_KEY, HIPCHAT_AUTH_TOKEN
 
 
 app = Flask(__name__)
 app.config['ERROR_404_HELP'] = False
 app.config.update(
     SURFLY_API_KEY=SURFLY_API_KEY,
+    HIPCHAT_AUTH_TOKEN=HIPCHAT_AUTH_TOKEN
 )
 
 sentry = Sentry(dsn=SENTRY_DSN)
@@ -57,6 +58,8 @@ def start_session():
         print(req)
 
         msg = req['item']['message']['message']
+        sender_link = req['item']['message']['from']['links']['self']
+        sender_name = req['item']['message']['from']['name']
         start_url = re.findall(r'/surfly (.*)', msg)[0]
 
         resp = requests.post(
@@ -86,10 +89,24 @@ def start_session():
         follower_link = resp_data['viewer_link']
         leader_link = resp_data['leader_link']
 
+        requests.post(
+            sender_link + '/share/link',
+            json={
+                'message': 'Open this link to start a session',
+                'link': leader_link
+            },
+            headers={
+                'Authorization': 'Bearer %s' % app.config['HIPCHAT_AUTH_TOKEN']
+            }
+        )
+
         return json.jsonify({
             'message_format': 'text',
             'notify': True,
-            'message': 'Started a Surfly session %s at %s' % (leader_link, follower_link),
+            'message': 'Started a Surfly session: {follower_link}. {sender_name} has received the leader link via PM'.format(
+                follower_link=follower_link,
+                sender_name=sender_name
+            ),
         })
 
 
