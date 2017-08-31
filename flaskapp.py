@@ -48,18 +48,18 @@ def capabilities_descriptor():
     })
 
 
-@app.route('/start_session')
+@app.route('/start_session', methods=['POST'])
 def start_session():
-    req = request.json
+    if request.method == 'POST':
+        req = request.json
+        print(req)
 
-    print(req)
-
-    follower_link = 'https://surfly.com/123-123-123'
-    return json.jsonify({
-        'message_format': 'text',
-        'notify': True,
-        'message': 'Started a Surfly session at %s' % follower_link
-    })
+        follower_link = 'https://surfly.com/123-123-123'
+        return json.jsonify({
+            'message_format': 'text',
+            'notify': True,
+            'message': 'Started a Surfly session at %s' % follower_link,
+        })
 
 
 @app.route('/<path:path>')
