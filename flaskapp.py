@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask, send_from_directory, json, request
 from raven.contrib.flask import Sentry
 
@@ -52,13 +53,15 @@ def capabilities_descriptor():
 def start_session():
     if request.method == 'POST':
         req = request.json
-        print(req)
+        msg = req['item']['message']['message']
+
+        start_url = re.findall(r'/surfly (.*)', msg)[0]
 
         follower_link = 'https://surfly.com/123-123-123'
         return json.jsonify({
             'message_format': 'text',
             'notify': True,
-            'message': 'Started a Surfly session at %s' % follower_link,
+            'message': 'Started a Surfly session %s at %s' % (start_url, follower_link),
         })
 
 
