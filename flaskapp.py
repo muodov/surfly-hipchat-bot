@@ -55,12 +55,16 @@ def capabilities_descriptor():
 def start_session():
     if request.method == 'POST':
         req = request.json
-        print(req)
 
         msg = req['item']['message']['message']
         sender_link = req['item']['message']['from']['links']['self']
         sender_name = req['item']['message']['from']['name']
-        start_url = re.findall(r'/surfly (.*)', msg)[0]
+
+        pat_match = re.findall(r'/surfly (.*)', msg)
+        if not pat_match:
+            return
+
+        start_url = pat_match[0]
 
         resp = requests.post(
             'https://api.surfly.com/v2/sessions/',
