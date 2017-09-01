@@ -85,6 +85,7 @@ def install():
         group_id=req.get('groupId'),
     )
     installation.save()
+    return ''
 
 
 @app.route('/start_session', methods=['POST'])
