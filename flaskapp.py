@@ -46,9 +46,23 @@ def capabilities_descriptor():
                     "event": "room_message",
                     "name": "start session"
                 }
+            ],
+            "dialog": [
+                {
+                    "key": "leader-link-dialog",
+                    "title": {
+                        "value": "Surfly session started"
+                    },
+                    "url": "https://surfly-hipchat.herokuapp.com/leader-dialog"
+                }
             ]
         }
     })
+
+
+@app.route('/leader-dialog')
+def leader_dialog():
+    return '<h1>HEY!</h1>'
 
 
 @app.route('/start_session', methods=['POST'])
