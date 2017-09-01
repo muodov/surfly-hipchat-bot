@@ -27,13 +27,12 @@ def validate_auth(request):
         token = header[4:]
         try:
             payload = jwt.decode(token, validate=False)
-            installation = Installation.select(
-                Installation.oauth_secret
-            ).where(
+            installation = Installation.get(
                 Installation.oauth_id == payload['iss']
             )
             jwt.decode(token, key=installation.oauth_secret)
-        except:
+        except Exception as e:
+            print(e)
             abort(401)
     else:
         abort(401)
