@@ -5,7 +5,8 @@ import requests
 from flask import Flask, send_from_directory, json, request, abort
 from raven.contrib.flask import Sentry
 
-from settings import SENTRY_DSN, SURFLY_API_KEY, HIPCHAT_AUTH_TOKEN
+from models import Installation
+from settings import SENTRY_DSN, SURFLY_API_KEY, HIPCHAT_AUTH_TOKEN, SERVER_NAME
 
 
 app = Flask(__name__)
@@ -21,8 +22,21 @@ if not app.config['DEBUG']:
 
 
 def validate_auth(request):
-    print(request.headers.get('Authorization'))
-    print(request.headers.get('authorization'))
+    header = request.headers.get('Authorization')
+    if header and header.startswith('JWT '):
+        token = header[4:]
+        try:
+            payload = jwt.decode(token, validate=False)
+            installation = Installation.select(
+                Installation.oauth_secret
+            ).where(
+                Installation.oauth_id == payload['iss']
+            )
+            jwt.decode(token, key=installation.oauth_secret)
+        except:
+            abort(401)
+    else:
+        abort(401)
 
 
 @app.route('/capabilities')
@@ -32,13 +46,16 @@ def capabilities_descriptor():
         "description": "A bot that can start cobrowsing sessions from Hipchat",
         "key": "com.muodov.surfly",
         "links": {
-            "homepage": "https://surfly-hipchat.herokuapp.com/",
-            "self": "https://surfly-hipchat.herokuapp.com/capabilities"
+            "homepage": SERVER_NAME,
+            "self": SERVER_NAME + "capabilities"
         },
         "capabilities": {
+            "installable": {
+                "callbackUrl": SERVER_NAME + "install"
+            },
             "hipchatApiConsumer": {
                 "fromName": "Surfly Bot",
-                "avatar": "https://surfly-hipchat.herokuapp.com/avatar.png",
+                "avatar": SERVER_NAME + "avatar.png",
                 "scopes": [
                     "send_notification",
                     "send_message"
@@ -46,7 +63,7 @@ def capabilities_descriptor():
             },
             "webhook": [
                 {
-                    "url": "https://surfly-hipchat.herokuapp.com/start_session",
+                    "url": SERVER_NAME + "start_session",
                     "authentication": "jwt",
                     "pattern": "^/surfly ",
                     "event": "room_message",
@@ -55,6 +72,19 @@ def capabilities_descriptor():
             ]
         }
     })
+
+
+@app.route('/install', methods=['POST'])
+def install():
+    req = request.json
+    installation = Installation(
+        oauth_id=req.get('oauthId'),
+        oauth_secret=req.get('oauthSecret'),
+        capabilities_url=req.get('capabilitiesUrl'),
+        room_id=req.get('roomId'),
+        group_id=req.get('groupId'),
+    )
+    installation.save()
 
 
 @app.route('/start_session', methods=['POST'])
