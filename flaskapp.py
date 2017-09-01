@@ -26,7 +26,7 @@ def validate_auth(request):
     if header and header.startswith('JWT '):
         token = header[4:]
         try:
-            payload = jwt.decode(token, validate=False)
+            payload = jwt.decode(token, verify=False)
             installation = Installation.get(
                 Installation.oauth_id == payload['iss']
             )
