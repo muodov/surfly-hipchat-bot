@@ -32,7 +32,7 @@ def validate_auth(request):
             )
             jwt.decode(token, key=installation.oauth_secret)
         except Exception as e:
-            print(e)
+            print(e, token)
             abort(401)
     else:
         abort(401)
