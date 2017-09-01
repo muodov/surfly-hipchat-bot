@@ -1,7 +1,8 @@
 import os
 import re
+import jwt
 import requests
-from flask import Flask, send_from_directory, json, request
+from flask import Flask, send_from_directory, json, request, abort
 from raven.contrib.flask import Sentry
 
 from settings import SENTRY_DSN, SURFLY_API_KEY, HIPCHAT_AUTH_TOKEN
@@ -17,6 +18,11 @@ app.config.update(
 sentry = Sentry(dsn=SENTRY_DSN)
 if not app.config['DEBUG']:
     sentry.init_app(app)
+
+
+def validate_auth(request):
+    print(request.headers.get('Authorization'))
+    print(request.headers.get('authorization'))
 
 
 @app.route('/capabilities')
@@ -54,6 +60,8 @@ def capabilities_descriptor():
 @app.route('/start_session', methods=['POST'])
 def start_session():
     if request.method == 'POST':
+        validate_auth(request)
+
         req = request.json
 
         msg = req['item']['message']['message']
