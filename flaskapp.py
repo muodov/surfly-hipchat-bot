@@ -62,7 +62,7 @@ def start_session():
 
         pat_match = re.findall(r'/surfly (.*)', msg)
         if not pat_match:
-            return
+            return ''
 
         start_url = pat_match[0]
 
