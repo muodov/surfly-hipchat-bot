@@ -61,7 +61,7 @@ def capabilities_descriptor():
                 {
                     "url": SERVER_NAME + "start_session",
                     "authentication": "jwt",
-                    "pattern": "^/surfly ",
+                    "pattern": "^/ ",
                     "event": "room_message",
                     "name": "start session"
                 }
@@ -116,95 +116,125 @@ def uninstall(oauth_id):
 
 @app.route('/start_session', methods=['POST'])
 def start_session():
-    if request.method == 'POST':
-        header = request.headers.get('Authorization')
-        if header and header.startswith('JWT '):
-            token = header[4:]
-            installation = validate_auth(token)
-        else:
-            abort(401)
+    header = request.headers.get('Authorization')
+    if header and header.startswith('JWT '):
+        token = header[4:]
+        installation = validate_auth(token)
+    else:
+        abort(401)
 
-        req = request.json
+    req = request.json
 
-        msg = req['item']['message']['message']
-        sender_link = req['item']['message']['from']['links']['self']
-        sender_name = req['item']['message']['from']['name']
+    msg = req['item']['message']['message']
+    sender_link = req['item']['message']['from']['links']['self']
+    sender_name = req['item']['message']['from']['name']
 
-        pat_match = re.findall(r'/surfly (.*)', msg)
-        if not pat_match:
-            return ''
-
-        if not installation.surfly_api_key or not installation.hipchat_user_token:
-            return json.jsonify({
-                'color': 'yellow',
-                'message_format': 'text',
-                'notify': True,
-                'message': 'Surfly HipChat bot is not configured yet.',
-            })
-
+    pat_match = re.findall(r'/surfly (.*)', msg)
+    if pat_match:
         start_url = pat_match[0]
+    else:
+        aliases = []
+        try:
+            aliases = json.loads(installation.aliases)
+        except ValueError:
+            pass
+        for alias in aliases:
+            if alias[0] == msg:
+                start_url = aliases[msg]
+                break
 
-        resp = requests.post(
-            'https://api.surfly.com/v2/sessions/',
-            params={'api_key': installation.surfly_api_key},
-            json={
-                'url': start_url,
-            },
-            timeout=5
-        )
+    if not start_url:
+        return ''
 
-        if resp.status_code != 200:
-            err_msg = str(resp.status_code)
-            try:
-                err_msg += str(resp.json())
-            except:
-                pass
-            return json.jsonify({
-                'color': 'red',
-                'message_format': 'text',
-                'notify': True,
-                'message': 'Error while creating a session: %s' % err_msg,
-            })
-
-        resp_data = resp.json()
-        follower_link = resp_data['viewer_link']
-        leader_link = resp_data['leader_link']
-
-        requests.post(
-            sender_link + '/message',
-            json={
-                'message': 'Open this link to start the session: <a href="{link}">{link}</a>'.format(
-                    link=leader_link
-                ),
-                'notify': True,
-                'message_format': 'html',
-            },
-            headers={
-                'Authorization': 'Bearer %s' % installation.hipchat_user_token
-            }
-        )
-
+    if not installation.surfly_api_key or not installation.hipchat_user_token:
         return json.jsonify({
+            'color': 'yellow',
             'message_format': 'text',
             'notify': True,
-            'message': 'Started a Surfly session: {follower_link}. {sender_name} has received the leader link via PM'.format(
-                follower_link=follower_link,
-                sender_name=sender_name
-            ),
+            'message': 'Surfly HipChat bot is not configured yet.',
         })
+
+    resp = requests.post(
+        'https://api.surfly.com/v2/sessions/',
+        params={'api_key': installation.surfly_api_key},
+        json={
+            'url': start_url,
+        },
+        timeout=5
+    )
+
+    if resp.status_code != 200:
+        err_msg = str(resp.status_code)
+        try:
+            err_msg += str(resp.json())
+        except:
+            pass
+        return json.jsonify({
+            'color': 'red',
+            'message_format': 'text',
+            'notify': True,
+            'message': 'Error while creating a session: %s' % err_msg,
+        })
+
+    resp_data = resp.json()
+    follower_link = resp_data['viewer_link']
+    leader_link = resp_data['leader_link']
+
+    requests.post(
+        sender_link + '/message',
+        json={
+            'message': 'Open this link to start the session: <a href="{link}">{link}</a>'.format(
+                link=leader_link
+            ),
+            'notify': True,
+            'message_format': 'html',
+        },
+        headers={
+            'Authorization': 'Bearer %s' % installation.hipchat_user_token
+        }
+    )
+
+    return json.jsonify({
+        'message_format': 'text',
+        'notify': True,
+        'message': 'Started a Surfly session: {follower_link}. {sender_name} has received the leader link via PM'.format(
+            follower_link=follower_link,
+            sender_name=sender_name
+        ),
+    })
 
 
 @app.route('/config', methods=['GET', 'POST'])
 def config():
     jwt = request.args.get('signed_request')
     installation = validate_auth(jwt)
+    aliases = json.loads(installation.aliases)
+    for i in range(5):
+        if i > len(aliases):
+            aliases.append(['', ''])
     if request.method == 'POST':
         installation.surfly_api_key = request.form.get('surfly_api_key')
         installation.hipchat_user_token = request.form.get('hipchat_api_token')
+        installation.aliases = json.dumps([
+            (request.form.get('aliaskey0', ''), request.form.get('aliasval0', '')),
+            (request.form.get('aliaskey1', ''), request.form.get('aliasval1', '')),
+            (request.form.get('aliaskey2', ''), request.form.get('aliasval2', '')),
+            (request.form.get('aliaskey3', ''), request.form.get('aliasval3', '')),
+            (request.form.get('aliaskey4', ''), request.form.get('aliasval4', '')),
+        ])
         installation.save()
-        return render_template('config.html', installation=installation, notification=True)
+        return render_template(
+            'config.html',
+            installation=installation,
+            aliases=aliases,
+            notification=True
+        )
     else:
-        return render_template('config.html', installation=installation)
+        return render_template(
+            'config.html',
+            installation=installation,
+            aliases=aliases,
+        )
 
 
 @app.route('/<path:path>')

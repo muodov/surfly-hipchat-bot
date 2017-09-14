@@ -42,6 +42,72 @@
             <p class="help">Used to send private messages. Get it at <a href="https://surfly.hipchat.com/account/api">https://surfly.hipchat.com/account/api</a></p>
         </div>
 
+        <div class="field is-grouped">
+            <label class="label">You can add up to 5 aliases below</label>
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliaskey0" placeholder="e.g. /standup"
+                    value="{{ aliases[0][0] }}" />
+            </div>
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliasval0" placeholder="e.g. /standup"
+                    value="{{ aliases[0][1] }}" />
+            </div>
+        </div>
+
+        <div class="field is-grouped">
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliaskey1" placeholder="e.g. /standup"
+                    value="{{ aliases[1][0] }}" />
+            </div>
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliasval1" placeholder="e.g. /standup"
+                    value="{{ aliases[1][1] }}" />
+            </div>
+        </div>
+
+        <div class="field is-grouped">
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliaskey2" placeholder="e.g. /standup"
+                    value="{{ aliases[2][0] }}" />
+            </div>
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliasval2" placeholder="e.g. /standup"
+                    value="{{ aliases[2][1] }}" />
+            </div>
+        </div>
+
+        <div class="field is-grouped">
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliaskey3" placeholder="e.g. /standup"
+                    value="{{ aliases[3][0] }}" />
+            </div>
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliasval3" placeholder="e.g. /standup"
+                    value="{{ aliases[3][1] }}" />
+            </div>
+        </div>
+
+        <div class="field is-grouped">
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliaskey4" placeholder="e.g. /standup"
+                    value="{{ aliases[4][0] }}" />
+            </div>
+            <div class="control">
+                <input class="input" type="text"
+                    name="aliasval4" placeholder="e.g. /standup"
+                    value="{{ aliases[4][1] }}" />
+            </div>
+        </div>
+
         <div class="field">
             <div class="control">
                 <input type="submit" class="button is-primary" value="Save" />

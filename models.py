@@ -3,6 +3,7 @@ from peewee import (
     IntegerField,
     CharField,
     BooleanField,
+    TextField,
 )
 from playhouse.db_url import connect
 
@@ -29,6 +30,7 @@ class Installation(BaseModel):
     surfly_api_key = CharField(null=True)
     hipchat_user_token = CharField(null=True)
     uninstalled = BooleanField(default=False)
+    aliases = TextField(default='[]')
 
 
 if __name__ == '__main__':
