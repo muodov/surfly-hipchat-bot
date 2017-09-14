@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.5.2/css/bulma.min.css">
 </head>
 <body>
+    {% if notification %}
+    <div class="notification is-success">
+        Settings saved
+    </div>
+    {% endif %}
     <form method="POST">
         <div class="field">
             <label class="label">Surfly REST API key</label>

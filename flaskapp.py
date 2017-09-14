@@ -202,7 +202,9 @@ def config():
         installation.surfly_api_key = request.form.get('surfly_api_key')
         installation.hipchat_user_token = request.form.get('hipchat_api_token')
         installation.save()
-    return render_template('config.html', installation=installation)
+        return render_template('config.html', installation=installation, notification=True)
+    else:
+        return render_template('config.html', installation=installation)
 
 
 @app.route('/<path:path>')
