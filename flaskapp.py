@@ -2,29 +2,23 @@ import os
 import re
 import jwt
 import requests
-from flask import Flask, send_from_directory, json, request, abort
+from flask import Flask, send_from_directory, json, request, abort, render_template
 from raven.contrib.flask import Sentry
 
 from models import Installation
-from settings import SENTRY_DSN, SURFLY_API_KEY, HIPCHAT_AUTH_TOKEN, SERVER_NAME
+from settings import SENTRY_DSN, SERVER_NAME
 
 
 app = Flask(__name__)
 app.config['ERROR_404_HELP'] = False
-app.config.update(
-    SURFLY_API_KEY=SURFLY_API_KEY,
-    HIPCHAT_AUTH_TOKEN=HIPCHAT_AUTH_TOKEN
-)
 
 sentry = Sentry(dsn=SENTRY_DSN)
 if not app.config['DEBUG']:
     sentry.init_app(app)
 
 
-def validate_auth(request):
-    header = request.headers.get('Authorization')
-    if header and header.startswith('JWT '):
-        token = header[4:]
+def validate_auth(token):
+    if token:
         try:
             payload = jwt.decode(token, verify=False)
             installation = Installation.get(
@@ -34,6 +28,8 @@ def validate_auth(request):
         except Exception as e:
             print(e, token)
             abort(401)
+        else:
+            return installation
     else:
         abort(401)
 
@@ -68,7 +64,10 @@ def capabilities_descriptor():
                     "event": "room_message",
                     "name": "start session"
                 }
-            ]
+            ],
+            "configurable": {
+                "url": SERVER_NAME + "config"
+            }
         }
     })
 
@@ -90,7 +89,12 @@ def install():
 @app.route('/start_session', methods=['POST'])
 def start_session():
     if request.method == 'POST':
-        validate_auth(request)
+        header = request.headers.get('Authorization')
+        if header and header.startswith('JWT '):
+            token = header[4:]
+            installation = validate_auth(token)
+        else:
+            abort(401)
 
         req = request.json
 
@@ -102,14 +106,21 @@ def start_session():
         if not pat_match:
             return ''
 
+        if not installation.surfly_api_key or not installation.hipchat_user_token:
+            return json.jsonify({
+                'color': 'yellow',
+                'message_format': 'text',
+                'notify': True,
+                'message': 'Surfly HipChat bot is not configured yet.',
+            })
+
         start_url = pat_match[0]
 
         resp = requests.post(
             'https://api.surfly.com/v2/sessions/',
-            params={'api_key': app.config['SURFLY_API_KEY']},
+            params={'api_key': installation.surfly_api_key},
             json={
                 'url': start_url,
-
             },
             timeout=5
         )
@@ -141,7 +152,7 @@ def start_session():
                 'message_format': 'html',
             },
             headers={
-                'Authorization': 'Bearer %s' % app.config['HIPCHAT_AUTH_TOKEN']
+                'Authorization': 'Bearer %s' % installation.hipchat_user_token
             }
         )
 
@@ -153,6 +164,19 @@ def start_session():
                 sender_name=sender_name
             ),
         })
+
+
+@app.route('/config')
+def config(methods=['GET', 'POST']):
+    jwt = request.args.get('signed_request')
+    installation = validate_auth(jwt)
+    if request.method == 'GET':
+        return render_template('config.html', installation=installation)
+    else:
+        installation.surfly_api_key = request.form.get('surfly_api_key')
+        installation.hipchat_user_token = request.form.get('hipchat_api_token')
+        installation.save()
+        return ''
 
 
 @app.route('/<path:path>')

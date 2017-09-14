@@ -25,6 +25,8 @@ class Installation(BaseModel):
     capabilities_url = CharField()
     room_id = IntegerField(null=True)
     group_id = IntegerField(null=True)
+    surfly_api_key = CharField(null=True)
+    hipchat_user_token = CharField(null=True)
 
 
 if __name__ == '__main__':
