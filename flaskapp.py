@@ -46,7 +46,8 @@ def capabilities_descriptor():
         },
         "capabilities": {
             "installable": {
-                "callbackUrl": SERVER_NAME + "install"
+                "callbackUrl": SERVER_NAME + "install",
+                "updateCallbackUrl": SERVER_NAME + "update"
             },
             "hipchatApiConsumer": {
                 "fromName": "Surfly Bot",
@@ -83,6 +84,33 @@ def install():
         group_id=req.get('groupId'),
     )
     installation.save()
+    return ''
+
+
+@app.route('/update', methods=['POST'])
+def update():
+    req = request.json
+    try:
+        installation = Installation.get(
+            Installation.oauth_id == req.get('oauthId')
+        )
+        installation.uninstalled = False
+        installation.save()
+    except Installation.DoesNotExist:
+        pass
+    return ''
+
+
+@app.route('/install/<oauth_id>', methods=['DELETE'])
+def uninstall(oauth_id):
+    try:
+        installation = Installation.get(
+            Installation.oauth_id == oauth_id
+        )
+        installation.uninstalled = True
+        installation.save()
+    except Installation.DoesNotExist:
+        pass
     return ''
 
 
