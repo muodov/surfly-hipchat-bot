@@ -210,7 +210,7 @@ def config():
     installation = validate_auth(jwt)
     aliases = json.loads(installation.aliases)
     for i in range(5):
-        if i > len(aliases):
+        if i >= len(aliases):
             aliases.append(['', ''])
     if request.method == 'POST':
         installation.surfly_api_key = request.form.get('surfly_api_key')
