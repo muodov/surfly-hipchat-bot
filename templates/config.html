@@ -12,7 +12,10 @@
         <div class="field">
             <label class="label">Surfly REST API key</label>
             <div class="control has-icons-left">
-                <input class="input" type="text" name="surfly_api_key" placeholder="e.g. f126280b94fe9039b6e1e22c66d878bf" required />
+                <input class="input" type="text"
+                    name="surfly_api_key" placeholder="e.g. f126280b94fe9039b6e1e22c66d878bf"
+                    required
+                    value="{{ installation.surfly_api_key }}" />
                 <span class="icon is-small is-left">
                     <i class="fa fa-key"></i>
                 </span>
@@ -23,12 +26,15 @@
         <div class="field">
             <label class="label">HipChat User Personal access token</label>
             <div class="control has-icons-left">
-                <input class="input" type="text" name="hipchat_api_token" placeholder="e.g. xx71Myij3AVS1uBYFLp3xll3UMZ7AqBkKDCYKE9S" required />
+                <input class="input" type="text"
+                    name="hipchat_api_token" placeholder="e.g. xx71Myij3AVS1uBYFLp3xll3UMZ7AqBkKDCYKE9S"
+                    required
+                    value="{{ installation.hipchat_user_token }}" />
                 <span class="icon is-small is-left">
                     <i class="fa fa-key"></i>
                 </span>
             </div>
-            <p class="help">Used to send private messages. Get it at <a href="https://surfly.hipchat.com/account/api"></a></p>
+            <p class="help">Used to send private messages. Get it at <a href="https://surfly.hipchat.com/account/api">https://surfly.hipchat.com/account/api</a></p>
         </div>
 
         <div class="field">

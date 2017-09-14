@@ -194,17 +194,15 @@ def start_session():
         })
 
 
-@app.route('/config')
-def config(methods=['GET', 'POST']):
+@app.route('/config', methods=['GET', 'POST'])
+def config():
     jwt = request.args.get('signed_request')
     installation = validate_auth(jwt)
-    if request.method == 'GET':
-        return render_template('config.html', installation=installation)
-    else:
+    if request.method == 'POST':
         installation.surfly_api_key = request.form.get('surfly_api_key')
         installation.hipchat_user_token = request.form.get('hipchat_api_token')
         installation.save()
-        return ''
+    return render_template('config.html', installation=installation)
 
 
 @app.route('/<path:path>')
