@@ -140,7 +140,7 @@ def start_session():
             pass
         for alias in aliases:
             if alias[0] == msg:
-                start_url = aliases[msg]
+                start_url = alias[1]
                 break
 
     if not start_url:
