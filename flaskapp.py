@@ -128,8 +128,10 @@ def start_session():
     msg = req['item']['message']['message']
     sender_link = req['item']['message']['from']['links']['self']
     sender_name = req['item']['message']['from']['name']
+    room_link = req['item']['room']['links']['self']
 
     pat_match = re.findall(r'/surfly (.*)', msg)
+    start_url = None
     if pat_match:
         start_url = pat_match[0]
     else:
@@ -194,14 +196,23 @@ def start_session():
         }
     )
 
-    return json.jsonify({
-        'message_format': 'text',
-        'notify': True,
-        'message': 'Started a Surfly session: {follower_link}. {sender_name} has received the leader link via PM'.format(
-            follower_link=follower_link,
-            sender_name=sender_name
-        ),
-    })
+    requests.post(
+        room_link + '/notification',
+        json={
+            'message_format': 'text',
+            'color': 'yellow',
+            'notify': True,
+            'message': 'Started a Surfly session: {follower_link}. {sender_name} has received the leader link via PM'.format(
+                follower_link=follower_link,
+                sender_name=sender_name
+            ),
+        },
+        headers={
+            'Authorization': 'Bearer %s' % installation.hipchat_user_token
+        }
+    )
+
+    return ''
 
 
 @app.route('/config', methods=['GET', 'POST'])
