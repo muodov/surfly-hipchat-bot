@@ -217,8 +217,8 @@ def start_session():
 
 @app.route('/config', methods=['GET', 'POST'])
 def config():
-    jwt = request.args.get('signed_request')
-    installation = validate_auth(jwt)
+    jwt_token = request.args.get('signed_request')
+    installation = validate_auth(jwt_token)
     aliases = json.loads(installation.aliases)
     for i in range(5):
         if i >= len(aliases):
