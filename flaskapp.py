@@ -196,7 +196,9 @@ def start_session():
         }
     )
 
-    requests.post(
+    print(room_link + '/notification')
+
+    resp = requests.post(
         room_link + '/notification',
         json={
             'message_format': 'text',
@@ -211,6 +213,7 @@ def start_session():
             'Authorization': 'Bearer %s' % installation.hipchat_user_token
         }
     )
+    print(resp.status_code, resp.text)
 
     return ''
 
